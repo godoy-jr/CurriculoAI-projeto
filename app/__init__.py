@@ -1,0 +1,2 @@
+"""CurriculoAI application package."""
+

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CurrículoAI</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header><div class="brand"><span>CA</span> CurrículoAI</div><a href="/docs">Documentação da API</a></header>
+  <main>
+    <section class="hero"><p class="tag">ANÁLISE DE CARREIRA COM IA</p><h1>Seu currículo conversa<br>com a vaga?</h1><p>Compare competências, descubra lacunas e receba recomendações práticas em poucos segundos.</p></section>
+    <form id="form" class="panel">
+      <label>Nome do candidato<input id="name" value="Marina Silva" maxlength="80" required></label>
+      <div class="columns">
+        <label>Currículo <small>mínimo de 80 caracteres</small><textarea id="resume" minlength="80" maxlength="12000" required placeholder="Cole aqui experiências, formação e competências..."></textarea><span id="resumeCount">0 / 12000</span></label>
+        <label>Descrição da vaga <small>mínimo de 80 caracteres</small><textarea id="job" minlength="80" maxlength="8000" required placeholder="Cole aqui responsabilidades e requisitos..."></textarea><span id="jobCount">0 / 8000</span></label>
+      </div>
+      <button type="submit">Analisar compatibilidade <b>→</b></button>
+      <p id="error" role="alert"></p>
+    </form>
+    <section id="loading" class="loading hidden"><div class="spinner"></div><h2>Analisando o perfil...</h2><p>Comparando experiências e requisitos da vaga.</p></section>
+    <section id="result" class="hidden"></section>
+  </main>
+  <footer>CurrículoAI — análise orientativa. Decisões de contratação devem sempre envolver avaliação humana.</footer>
+  <script src="/static/app.js"></script>
+</body>
+</html>
+
