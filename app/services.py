@@ -109,7 +109,7 @@ def analyze_demo(data: AnalysisRequest) -> AnalysisResponse:
         "desenvolvidas", "buscamos", "domínio", "criar", "atuar", "responsável", "responsabilidades",
         "incluindo", "desejável", "necessário", "necessária", "capacidade", "habilidade", "forte",
     }
-    words = lambda text: re.findall(r"[a-záàâãéêíóôõúç+#.]{3,}", text.lower())
+    words = lambda text: [word.strip(".") for word in re.findall(r"[a-záàâãéêíóôõúç+#.]{3,}", text.lower())]
     resume_words = Counter(w for w in words(data.resume) if w not in stopwords)
     job_words = Counter(w for w in words(data.job_description) if w not in stopwords)
     relevant = [w for w, _ in job_words.most_common(18)]
@@ -118,6 +118,13 @@ def analyze_demo(data: AnalysisRequest) -> AnalysisResponse:
     missing = [w for w in relevant if w not in resume_words][:5]
     score = round(100 * len(all_matches) / max(1, len(relevant)))
     resume_sentences = re.split(r"(?<=[.!?])\s+|\n+", data.resume.strip())
+    skill_labels = {
+        "apis": "APIs", "aws": "AWS", "backend": "Back-end", "c#": "C#", "c++": "C++",
+        "css": "CSS", "fastapi": "FastAPI", "git": "Git", "html": "HTML", "javascript": "JavaScript",
+        "node.js": "Node.js", "postgresql": "PostgreSQL", "python": "Python", "rest": "REST",
+        "sql": "SQL", "typescript": "TypeScript",
+    }
+    label = lambda skill: skill_labels.get(skill, skill.title())
     evidence = {
         skill: next((sentence.strip() for sentence in resume_sentences if skill in sentence.lower()), "")
         for skill in matches
@@ -126,13 +133,13 @@ def analyze_demo(data: AnalysisRequest) -> AnalysisResponse:
         match_score=score,
         summary=f"Foram encontrados {len(all_matches)} de {len(relevant)} termos relevantes da vaga no currículo de {data.candidate_name}.",
         strengths=[f"O currículo descreve: {evidence[skill]}" for skill in matches[:4]] or ["Não foram encontradas evidências de competências exigidas pela vaga no texto informado."],
-        matching_skills=[{"skill": skill.title(), "evidence": evidence[skill]} for skill in matches],
+        matching_skills=[{"skill": label(skill), "evidence": evidence[skill]} for skill in matches],
         missing_skills=[
             {
-                "skill": skill.title(),
+                "skill": label(skill),
                 "importance": "média",
                 "suggestion": (
-                    f"A vaga pede {skill}, mas esse requisito não foi identificado no currículo. "
+                    f"A vaga pede {label(skill)}, mas esse requisito não foi identificado no currículo. "
                     "Se você tem essa experiência, descreva um projeto ou atividade, como aplicou a competência e o resultado; "
                     "se não tem, não declare domínio e indique o que está estudando."
                 ),

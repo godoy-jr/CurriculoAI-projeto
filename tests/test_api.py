@@ -62,7 +62,9 @@ def test_demo_competencies_exclude_generic_job_language(monkeypatch):
     body = response.json()
     missing_names = {skill["skill"].lower() for skill in body["missing_skills"]}
     assert missing_names.isdisjoint({"estamos", "procurando", "pessoa", "desenvolvedora"})
-    assert missing_names.intersection({"apis", "backend", "python", "fastapi", "rest"})
+    assert missing_names.isdisjoint({"escaláveis", "escaláveis."})
+    assert "apis" in missing_names
+    assert missing_names.intersection({"back-end", "python", "fastapi", "rest"})
     assert all("projeto" in skill["suggestion"] for skill in body["missing_skills"])
     assert all("não declare domínio" in skill["suggestion"] for skill in body["missing_skills"])
 
