@@ -106,9 +106,10 @@ def analyze_demo(data: AnalysisRequest) -> AnalysisResponse:
     resume_words = Counter(w for w in words(data.resume) if w not in stopwords)
     job_words = Counter(w for w in words(data.job_description) if w not in stopwords)
     relevant = [w for w, _ in job_words.most_common(18)]
-    matches = [w for w in relevant if w in resume_words][:6]
+    all_matches = [w for w in relevant if w in resume_words]
+    matches = all_matches[:6]
     missing = [w for w in relevant if w not in resume_words][:5]
-    score = min(95, max(20, round(100 * len(matches) / max(1, len(relevant)) + 25)))
+    score = round(100 * len(all_matches) / max(1, len(relevant)))
     return AnalysisResponse(
         match_score=score,
         summary=f"O perfil de {data.candidate_name} apresenta compatibilidade parcial com a vaga, considerando os termos e experiências informados.",

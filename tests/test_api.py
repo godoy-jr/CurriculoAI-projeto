@@ -31,6 +31,19 @@ def test_demo_analysis(monkeypatch):
     assert isinstance(body["matching_skills"], list)
 
 
+def test_demo_score_is_zero_without_matching_terms(monkeypatch):
+    monkeypatch.setenv("DEMO_MODE", "true")
+    payload = {
+        "candidate_name": "Chico",
+        "resume": "Sou cozinheiro com ampla trajetória na área de alimentação e gestão de restaurantes.",
+        "job_description": "Buscamos engenheiro de software com Python, JavaScript, Kubernetes, APIs, banco de dados e segurança digital.",
+    }
+    response = client.post("/api/analyze", json=payload)
+
+    assert response.status_code == 200
+    assert response.json()["match_score"] == 0
+
+
 def test_rate_limit_returns_429(monkeypatch):
     async def rate_limited(_):
         raise AIServiceError("Limite de requisições atingido.", status_code=429)
