@@ -101,7 +101,14 @@ async def analyze_with_gemini(data: AnalysisRequest) -> AnalysisResponse:
 
 
 def analyze_demo(data: AnalysisRequest) -> AnalysisResponse:
-    stopwords = {"para", "com", "uma", "das", "dos", "que", "por", "como", "ser", "ter", "anos", "vaga", "experiência"}
+    stopwords = {
+        "para", "com", "uma", "das", "dos", "que", "por", "como", "ser", "ter", "anos", "vaga",
+        "experiência", "estamos", "procurando", "pessoa", "desenvolvedora", "trabalhar", "construção",
+        "serviços", "escaláveis", "exige", "conhecimentos", "serão", "considerados", "diferenciais",
+        "deverá", "colaborar", "equipe", "participar", "revisões", "código", "documentar", "soluções",
+        "desenvolvidas", "buscamos", "domínio", "criar", "atuar", "responsável", "responsabilidades",
+        "incluindo", "desejável", "necessário", "necessária", "capacidade", "habilidade", "forte",
+    }
     words = lambda text: re.findall(r"[a-záàâãéêíóôõúç+#.]{3,}", text.lower())
     resume_words = Counter(w for w in words(data.resume) if w not in stopwords)
     job_words = Counter(w for w in words(data.job_description) if w not in stopwords)
@@ -110,12 +117,28 @@ def analyze_demo(data: AnalysisRequest) -> AnalysisResponse:
     matches = all_matches[:6]
     missing = [w for w in relevant if w not in resume_words][:5]
     score = round(100 * len(all_matches) / max(1, len(relevant)))
+    resume_sentences = re.split(r"(?<=[.!?])\s+|\n+", data.resume.strip())
+    evidence = {
+        skill: next((sentence.strip() for sentence in resume_sentences if skill in sentence.lower()), "")
+        for skill in matches
+    }
     return AnalysisResponse(
         match_score=score,
-        summary=f"O perfil de {data.candidate_name} apresenta compatibilidade parcial com a vaga, considerando os termos e experiências informados.",
-        strengths=[f"Evidência de conhecimento em {skill}." for skill in matches[:4]] or ["Currículo apresenta informações profissionais relevantes."],
-        matching_skills=[{"skill": skill.title(), "evidence": f"O termo '{skill}' aparece no currículo."} for skill in matches],
-        missing_skills=[{"skill": skill.title(), "importance": "média", "suggestion": f"Inclua evidências de {skill}, caso possua essa experiência."} for skill in missing],
+        summary=f"Foram encontrados {len(all_matches)} de {len(relevant)} termos relevantes da vaga no currículo de {data.candidate_name}.",
+        strengths=[f"O currículo descreve: {evidence[skill]}" for skill in matches[:4]] or ["Não foram encontradas evidências de competências exigidas pela vaga no texto informado."],
+        matching_skills=[{"skill": skill.title(), "evidence": evidence[skill]} for skill in matches],
+        missing_skills=[
+            {
+                "skill": skill.title(),
+                "importance": "média",
+                "suggestion": (
+                    f"A vaga pede {skill}, mas esse requisito não foi identificado no currículo. "
+                    "Se você tem essa experiência, descreva um projeto ou atividade, como aplicou a competência e o resultado; "
+                    "se não tem, não declare domínio e indique o que está estudando."
+                ),
+            }
+            for skill in missing
+        ],
         resume_improvements=[
             "Use resultados mensuráveis nas experiências profissionais.",
             "Adapte o resumo profissional às competências centrais da vaga.",
