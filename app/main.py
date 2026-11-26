@@ -1,5 +1,3 @@
-import asyncio
-import logging
 import os
 from pathlib import Path
 
@@ -12,7 +10,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .schemas import AnalysisRequest, AnalysisResponse
 from .services import AIServiceError, analyze
-from tools.gemini_diagnostic import run_diagnostic
 
 load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent
@@ -38,18 +35,6 @@ if allowed_origins:
     )
 
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
-
-
-@app.on_event("startup")
-async def optional_gemini_diagnostic() -> None:
-    if os.getenv("GEMINI_DIAGNOSTIC_ON_STARTUP", "false").lower() not in {"1", "true", "yes"}:
-        return
-    try:
-        await asyncio.to_thread(run_diagnostic)
-    except Exception:
-        logging.getLogger("curriculoai.ai").warning(
-            "gemini_diagnostic_failed stage=startup status=internal_error field=unknown"
-        )
 
 
 @app.get("/", include_in_schema=False)
