@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -5,6 +6,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 from .schemas import AnalysisRequest, AnalysisResponse
 from .services import AIServiceError, analyze
@@ -17,6 +19,21 @@ app = FastAPI(
     description="Compara um currículo com uma vaga usando IA generativa.",
     version="1.0.0",
 )
+
+allowed_origins = [
+    origin.strip()
+    for origin in os.getenv("ALLOWED_ORIGINS", "").split(",")
+    if origin.strip()
+]
+if allowed_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=allowed_origins,
+        allow_credentials=False,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["Content-Type"],
+    )
+
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 
 

@@ -37,6 +37,9 @@ class AnalysisResponse(BaseModel):
     resume_improvements: list[str]
     interview_tips: list[str]
     cover_letter: str
-    disclaimer: str = "Análise orientativa gerada por IA; a decisão final deve ser humana."
+    disclaimer: str = (
+        "Formato da resposta validado automaticamente. A pontuação e as recomendações são orientativas; "
+        "confirme o conteúdo no currículo e mantenha a decisão final humana."
+    )
     mode: Literal["gemini", "demo"] = "gemini"
 

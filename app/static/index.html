@@ -16,7 +16,8 @@
         <label>Currículo <small>mínimo de 80 caracteres</small><textarea id="resume" minlength="80" maxlength="12000" required placeholder="Cole aqui experiências, formação e competências..."></textarea><span id="resumeCount">0 / 12000</span></label>
         <label>Descrição da vaga <small>mínimo de 80 caracteres</small><textarea id="job" minlength="80" maxlength="8000" required placeholder="Cole aqui responsabilidades e requisitos..."></textarea><span id="jobCount">0 / 8000</span></label>
       </div>
-      <button type="submit">Analisar compatibilidade <b>→</b></button>
+      <p class="mode-note">O resultado identifica se foi gerado pelo Gemini ou pelo modo demonstração local.</p>
+      <button id="submitButton" type="submit">Analisar compatibilidade <b>→</b></button>
       <p id="error" role="alert"></p>
     </form>
     <section id="loading" class="loading hidden"><div class="spinner"></div><h2>Analisando o perfil...</h2><p>Comparando experiências e requisitos da vaga.</p></section>

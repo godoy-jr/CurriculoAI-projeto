@@ -83,3 +83,31 @@ def test_rate_limit_returns_429(monkeypatch):
     assert response.status_code == 429
     assert "Limite de requisições" in response.json()["detail"]
 
+
+def test_timeout_returns_503(monkeypatch):
+    async def timed_out(_):
+        raise AIServiceError("A IA demorou demais para responder. Tente novamente.")
+
+    monkeypatch.setattr("app.main.analyze", timed_out)
+    response = client.post("/api/analyze", json={
+        "candidate_name": "Ana Lima",
+        "resume": "Desenvolvedora Python com experiência em FastAPI, SQL, APIs REST, testes automatizados e Git em projetos de tecnologia.",
+        "job_description": "Buscamos pessoa desenvolvedora com domínio de Python, FastAPI, SQL, APIs REST, Git, Docker e testes para criar serviços escaláveis.",
+    })
+    assert response.status_code == 503
+    assert "demorou demais" in response.json()["detail"]
+
+
+def test_invalid_ai_response_returns_503(monkeypatch):
+    async def invalid_response(_):
+        raise AIServiceError("A IA retornou uma resposta em formato inválido.")
+
+    monkeypatch.setattr("app.main.analyze", invalid_response)
+    response = client.post("/api/analyze", json={
+        "candidate_name": "Ana Lima",
+        "resume": "Desenvolvedora Python com experiência em FastAPI, SQL, APIs REST, testes automatizados e Git em projetos de tecnologia.",
+        "job_description": "Buscamos pessoa desenvolvedora com domínio de Python, FastAPI, SQL, APIs REST, Git, Docker e testes para criar serviços escaláveis.",
+    })
+    assert response.status_code == 503
+    assert "formato inválido" in response.json()["detail"]
+

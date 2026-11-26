@@ -9,3 +9,11 @@ services:
     envVars:
       - key: DEMO_MODE
         value: "true"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: "gemini-3.6-flash"
+      - key: REQUEST_TIMEOUT_SECONDS
+        value: "30"
+      - key: ALLOWED_ORIGINS
+        value: ""
