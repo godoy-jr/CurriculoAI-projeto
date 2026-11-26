@@ -45,9 +45,18 @@ def _provider_failure(response: httpx.Response, model: str) -> AIServiceError:
     """Translate provider failures without exposing provider payloads."""
     status = response.status_code
     provider_status = "unknown"
+    provider_field = "unknown"
     try:
         provider_error = response.json().get("error", {})
         provider_status = str(provider_error.get("status", "unknown"))[:40]
+        provider_message = str(provider_error.get("message", ""))
+        field_match = re.search(
+            r"(?:at|field|name)\s*[\"']([A-Za-z][A-Za-z0-9_.-]{0,79})",
+            provider_message,
+            flags=re.I,
+        )
+        if field_match:
+            provider_field = field_match.group(1)
     except (ValueError, TypeError, AttributeError):
         pass
 
@@ -77,11 +86,12 @@ def _provider_failure(response: httpx.Response, model: str) -> AIServiceError:
         public_status = 503
 
     logger.warning(
-        "gemini_rejection status=%s model=%s category=%s provider_status=%s",
+        "gemini_rejection status=%s model=%s category=%s provider_status=%s provider_field=%s",
         status,
         model,
         category,
         provider_status,
+        provider_field,
     )
     return AIServiceError(message, status_code=public_status)
 
