@@ -85,6 +85,20 @@ Use a mesma vaga de desenvolvedor(a) backend com Python, FastAPI, PostgreSQL, AP
 
 As porcentagens não são fixas: o critério da demonstração é comparar as evidências e as lacunas exibidas.
 
+## Melhorias para a demonstração
+
+- O formulário apresenta contadores, validação próxima aos campos, confirmação antes de substituir dados e carregamento sem apagar os textos.
+- O seletor de exemplos preenche a mesma vaga com cenários de compatibilidade baixa, média e alta, sem iniciar a análise automaticamente.
+- O resultado prioriza pontuação orientativa, resumo, competências com evidência, lacunas e sugestões. Evidência ausente aparece como `Não comprovada no currículo`.
+- O botão `Copiar resumo` copia uma síntese com pontuação, evidências e lacunas.
+- A interface é responsiva para celular, tela larga e projeção, e identifica visualmente Gemini versus demonstração.
+
+O backend registra apenas status, modelo, categoria e status técnico resumido de rejeições do Gemini. Não registra chave, currículo, descrição da vaga nem resposta bruta do provedor. O usuário recebe uma mensagem curta e nenhum fallback silencioso para demo é ativado.
+
+## Diagnóstico do Gemini
+
+Nos logs públicos disponíveis, a aplicação iniciou normalmente, respondeu `GET /` e `GET /api/health` com `200` e recebeu `POST /api/analyze`. A análise válida retornou `503`, mas a versão anterior não registrava o status do provedor, portanto os logs não permitem distinguir credencial, permissão, cota, modelo ou formato da requisição. A versão local passa a registrar essa categoria de forma segura; a confirmação final depende de um novo deploy e da leitura dos logs do Render.
+
 ## Roteiro da banca
 
 1. Visão geral e evolução do Trabalho 1 (2 min).
@@ -123,5 +137,5 @@ tests/          # testes da API
 
 O projeto possui configuração para Render em `render.yaml` e um `Dockerfile` para execução reproduzível. Depois do deploy, registre a URL pública nesta seção:
 
-`URL pública: <preencher após o deploy>`
+`URL pública: https://curriculoai-projeto.onrender.com/`
 

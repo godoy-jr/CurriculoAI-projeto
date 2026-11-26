@@ -98,6 +98,40 @@ def test_timeout_returns_503(monkeypatch):
     assert "demorou demais" in response.json()["detail"]
 
 
+def test_provider_auth_failure_is_safe_and_diagnostic(caplog):
+    import httpx
+    from app.services import _provider_failure
+
+    error = _provider_failure(
+        httpx.Response(403, json={"error": {"status": "PERMISSION_DENIED", "message": "secret"}}),
+        "gemini-3.6-flash",
+    )
+    assert error.status_code == 503
+    assert "chave" in str(error)
+    assert "secret" not in caplog.text
+    assert "permission" in caplog.text
+
+
+def test_provider_model_failure_is_safe(caplog):
+    import httpx
+    from app.services import _provider_failure
+
+    error = _provider_failure(httpx.Response(404, json={"error": {"status": "NOT_FOUND"}}), "invalid-model")
+    assert error.status_code == 503
+    assert "GEMINI_MODEL" in str(error)
+    assert "model_not_found" in caplog.text
+
+
+def test_provider_invalid_request_is_safe(caplog):
+    import httpx
+    from app.services import _provider_failure
+
+    error = _provider_failure(httpx.Response(400, json={"error": {"status": "INVALID_ARGUMENT"}}), "gemini-3.6-flash")
+    assert error.status_code == 503
+    assert "formato" in str(error)
+    assert "invalid_request" in caplog.text
+
+
 def test_invalid_ai_response_returns_503(monkeypatch):
     async def invalid_response(_):
         raise AIServiceError("A IA retornou uma resposta em formato inválido.")

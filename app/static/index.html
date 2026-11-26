@@ -2,29 +2,27 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>CurrículoAI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Compare um currículo com uma vaga usando IA generativa.">
+  <title>CurrículoAI | Análise orientativa</title>
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-  <header><div class="brand"><span>CA</span> CurrículoAI</div><a href="/docs">Documentação da API</a></header>
-  <main>
-    <section class="hero"><p class="tag">ANÁLISE DE CARREIRA COM IA</p><h1>Seu currículo conversa<br>com a vaga?</h1><p>Compare competências, descubra lacunas e receba recomendações práticas em poucos segundos.</p></section>
-    <form id="form" class="panel">
-      <label>Nome do candidato<input id="name" value="Marina Silva" maxlength="80" required></label>
-      <div class="columns">
-        <label>Currículo <small>mínimo de 80 caracteres</small><textarea id="resume" minlength="80" maxlength="12000" required placeholder="Cole aqui experiências, formação e competências..."></textarea><span id="resumeCount">0 / 12000</span></label>
-        <label>Descrição da vaga <small>mínimo de 80 caracteres</small><textarea id="job" minlength="80" maxlength="8000" required placeholder="Cole aqui responsabilidades e requisitos..."></textarea><span id="jobCount">0 / 8000</span></label>
-      </div>
-      <p class="mode-note">O resultado identifica se foi gerado pelo Gemini ou pelo modo demonstração local.</p>
-      <button id="submitButton" type="submit">Analisar compatibilidade <b>→</b></button>
-      <p id="error" role="alert"></p>
-    </form>
-    <section id="loading" class="loading hidden"><div class="spinner"></div><h2>Analisando o perfil...</h2><p>Comparando experiências e requisitos da vaga.</p></section>
-    <section id="result" class="hidden"></section>
+  <header class="site-header"><div class="shell header-inner"><a class="brand" href="/" aria-label="CurrículoAI início"><span class="brand-mark">C</span><span>CurrículoAI</span></a><span class="header-tag">Análise e insights</span></div></header>
+  <main class="shell">
+    <section class="hero" aria-labelledby="page-title"><div><p class="eyebrow">Seu próximo passo profissional</p><h1 id="page-title">Compare seu currículo com uma vaga.</h1><p class="hero-copy">Receba uma leitura orientativa com evidências encontradas, lacunas e sugestões práticas para melhorar sua candidatura.</p></div><div class="hero-note"><strong>Importante</strong><span>A pontuação é orientativa e não substitui uma avaliação humana.</span></div></section>
+    <section class="panel" aria-labelledby="form-title"><div class="section-heading"><div><p class="eyebrow">Comece por aqui</p><h2 id="form-title">Dados para análise</h2></div><span class="required-note">Todos os campos são obrigatórios</span></div>
+      <form id="analysisForm" novalidate>
+        <div class="field full-width"><label for="candidateName">Seu nome</label><input id="candidateName" name="candidate_name" type="text" maxlength="80" autocomplete="name" placeholder="Ex.: Ana Souza"><div class="field-meta"><p class="field-error" id="candidateNameError" role="alert"></p><span class="counter" id="candidateNameCounter">0 / 80</span></div></div>
+        <div class="form-grid"><div class="field"><label for="resume">1. Currículo <span class="label-hint">(80 a 12.000 caracteres)</span></label><textarea id="resume" name="resume" maxlength="12000" placeholder="Cole aqui o currículo, experiências, formação e competências..."></textarea><div class="field-meta"><p class="field-error" id="resumeError" role="alert"></p><span class="counter" id="resumeCounter">0 / 12000</span></div></div><div class="field"><label for="jobDescription">2. Descrição da vaga <span class="label-hint">(80 a 8.000 caracteres)</span></label><textarea id="jobDescription" name="job_description" maxlength="8000" placeholder="Cole aqui os requisitos e responsabilidades da vaga..."></textarea><div class="field-meta"><p class="field-error" id="jobDescriptionError" role="alert"></p><span class="counter" id="jobDescriptionCounter">0 / 8000</span></div></div></div>
+        <div class="demo-tools"><div><label for="exampleScenario">Cenário para demonstração</label><select id="exampleScenario"><option value="low">Compatibilidade baixa</option><option value="medium">Compatibilidade média</option><option value="high">Compatibilidade alta</option></select></div><button class="button button-secondary" id="exampleButton" type="button">Carregar exemplo fictício</button></div>
+        <p class="demo-note" id="exampleStatus" role="status">O exemplo preenche o formulário sem iniciar a análise.</p><p class="mode-note"><strong>Modo:</strong> a resposta identifica se foi gerada pelo Gemini ou pelo modo demonstração configurado no servidor. Nenhum modo é ativado automaticamente em caso de falha.</p><p class="form-error" id="formError" role="alert"></p><div class="form-actions"><button class="button button-primary" id="submitButton" type="submit">Analisar currículo</button></div>
+      </form>
+    </section>
+    <section class="loading panel" id="loading" aria-live="polite" hidden><div class="spinner" aria-hidden="true"></div><div><strong>Analisando seu perfil...</strong><p>Seus textos continuam preenchidos. Isso pode levar alguns segundos.</p></div></section>
+    <section class="result-section" id="result" aria-live="polite" hidden></section>
   </main>
-  <footer>CurrículoAI — análise orientativa. Decisões de contratação devem sempre envolver avaliação humana.</footer>
-  <script src="/static/app.js"></script>
+  <footer class="site-footer"><div class="shell"><p>CurrículoAI · Análise orientativa com IA generativa</p><p>Use as sugestões como apoio e revise o resultado antes de tomar decisões.</p></div></footer>
+  <script src="/static/app.js" defer></script>
 </body>
 </html>
-

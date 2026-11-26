@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import re
 from collections import Counter
@@ -6,6 +7,9 @@ from collections import Counter
 import httpx
 
 from .schemas import AnalysisRequest, AnalysisResponse
+
+
+logger = logging.getLogger("curriculoai.ai")
 
 
 SYSTEM_PROMPT = """
@@ -35,6 +39,51 @@ class AIServiceError(RuntimeError):
     def __init__(self, message: str, status_code: int = 503):
         super().__init__(message)
         self.status_code = status_code
+
+
+def _provider_failure(response: httpx.Response, model: str) -> AIServiceError:
+    """Translate provider failures without exposing provider payloads."""
+    status = response.status_code
+    provider_status = "unknown"
+    try:
+        provider_error = response.json().get("error", {})
+        provider_status = str(provider_error.get("status", "unknown"))[:40]
+    except (ValueError, TypeError, AttributeError):
+        pass
+
+    if status == 429:
+        category = "rate_limit"
+        message = "Limite de requisições atingido. Aguarde e tente novamente."
+        public_status = 429
+    elif status in {401, 403}:
+        category = "authentication_or_permission"
+        message = "A integração com a IA não está autorizada. Verifique a chave e as permissões."
+        public_status = 503
+    elif status == 404:
+        category = "model_not_found"
+        message = "O modelo de IA configurado não está disponível. Verifique GEMINI_MODEL."
+        public_status = 503
+    elif status == 400:
+        category = "invalid_request"
+        message = "A IA rejeitou a solicitação. Verifique o modelo e o formato configurados."
+        public_status = 503
+    elif status >= 500:
+        category = "provider_unavailable"
+        message = "O serviço de IA está temporariamente indisponível. Tente novamente."
+        public_status = 503
+    else:
+        category = "provider_rejected"
+        message = "O serviço de IA rejeitou a solicitação. Tente novamente."
+        public_status = 503
+
+    logger.warning(
+        "gemini_rejection status=%s model=%s category=%s provider_status=%s",
+        status,
+        model,
+        category,
+        provider_status,
+    )
+    return AIServiceError(message, status_code=public_status)
 
 
 def _extract_json(text: str) -> dict:
@@ -81,15 +130,8 @@ async def analyze_with_gemini(data: AnalysisRequest) -> AnalysisResponse:
     except httpx.RequestError as exc:
         raise AIServiceError("Não foi possível conectar ao serviço de IA.") from exc
 
-    if response.status_code == 429:
-        raise AIServiceError(
-            "Limite de requisições atingido. Aguarde e tente novamente.",
-            status_code=429,
-        )
-    if response.status_code >= 500:
-        raise AIServiceError("O serviço de IA está temporariamente indisponível.")
     if response.status_code >= 400:
-        raise AIServiceError("O serviço de IA rejeitou a solicitação.")
+        raise _provider_failure(response, model)
 
     try:
         text = response.json()["candidates"][0]["content"]["parts"][0]["text"]

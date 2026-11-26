@@ -1,64 +1,33 @@
-const form = document.querySelector('#form');
-const loading = document.querySelector('#loading');
-const result = document.querySelector('#result');
-const error = document.querySelector('#error');
-const submitButton = document.querySelector('#submitButton');
-
-for (const [id, max] of [['resume', 12000], ['job', 8000]]) {
-  const el = document.querySelector(`#${id}`);
-  const out = document.querySelector(`#${id}Count`);
-  el.addEventListener('input', () => { out.textContent = `${el.value.length} / ${max}`; });
-}
-
-const esc = value => String(value ?? '').replace(/[&<>'\"]/g, character => ({
-  '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-}[character]));
-const list = items => `<ul>${items.map(item => `<li>${esc(item)}</li>`).join('')}</ul>`;
-
-function friendlyError(status, detail, fields = []) {
-  if (status === 429) return 'O serviço está recebendo muitas solicitações. Aguarde alguns segundos e tente novamente.';
-  if (status === 503) return detail || 'A IA está temporariamente indisponível. Tente novamente em instantes.';
-  if (status === 400) {
-    const names = fields.map(field => field.field).filter(Boolean);
-    return names.length
-      ? `${detail || 'Dados inválidos.'} Revise: ${names.join(', ')}.`
-      : detail || 'Revise os campos: há dados inválidos ou texto insuficiente.';
-  }
-  return detail || 'Não foi possível realizar a análise. Tente novamente.';
-}
-
-form.addEventListener('submit', async event => {
-  event.preventDefault();
-  error.textContent = '';
-  result.classList.add('hidden');
-  loading.classList.remove('hidden');
-  submitButton.disabled = true;
-  submitButton.setAttribute('aria-busy', 'true');
-
-  try {
-    const response = await fetch('/api/analyze', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        candidate_name: document.querySelector('#name').value,
-        resume: document.querySelector('#resume').value,
-        job_description: document.querySelector('#job').value,
-      }),
-    });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(friendlyError(response.status, data.detail, data.errors));
-
-    result.innerHTML = `<div class="score-row"><div class="score">${data.match_score}%</div><div><span class="badge">modo ${esc(data.mode)}</span><h2>Resultado da análise</h2><p>${esc(data.summary)}</p></div></div><div class="grid"><article class="result-card"><h3>Pontos fortes</h3>${list(data.strengths)}</article><article class="result-card"><h3>Competências encontradas</h3>${list(data.matching_skills.map(item => `${item.skill}: ${item.evidence}`))}</article><article class="result-card"><h3>Competências a desenvolver</h3>${list(data.missing_skills.map(item => `${item.skill} (${item.importance}): ${item.suggestion}`))}</article><article class="result-card"><h3>Melhorias no currículo</h3>${list(data.resume_improvements)}</article><article class="result-card"><h3>Dicas para entrevista</h3>${list(data.interview_tips)}</article><article class="result-card full"><h3>Carta de apresentação sugerida</h3><p>${esc(data.cover_letter)}</p></article></div><p><small>${esc(data.disclaimer)}</small></p>`;
-    result.classList.remove('hidden');
-    result.scrollIntoView({behavior: 'smooth'});
-  } catch (requestError) {
-    error.textContent = requestError instanceof TypeError
-      ? 'Não foi possível conectar à aplicação. Verifique sua conexão e tente novamente.'
-      : requestError.message;
-    form.scrollIntoView({behavior: 'smooth'});
-  } finally {
-    loading.classList.add('hidden');
-    submitButton.disabled = false;
-    submitButton.removeAttribute('aria-busy');
-  }
-});
+const form = document.querySelector("#analysisForm");
+const result = document.querySelector("#result");
+const loading = document.querySelector("#loading");
+const formError = document.querySelector("#formError");
+const submitButton = document.querySelector("#submitButton");
+const exampleButton = document.querySelector("#exampleButton");
+const exampleStatus = document.querySelector("#exampleStatus");
+const scenarioSelect = document.querySelector("#exampleScenario");
+const fields = {
+  candidateName: { input: document.querySelector("#candidateName"), error: document.querySelector("#candidateNameError"), max: 80, min: 2 },
+  resume: { input: document.querySelector("#resume"), error: document.querySelector("#resumeError"), max: 12000, min: 80 },
+  jobDescription: { input: document.querySelector("#jobDescription"), error: document.querySelector("#jobDescriptionError"), max: 8000, min: 80 },
+};
+const examples = {
+  job: "Buscamos pessoa desenvolvedora Python para construir APIs REST com FastAPI. Requisitos: experiência profissional com Python, FastAPI, PostgreSQL, testes automatizados, Git, Docker, integração com serviços externos e trabalho colaborativo. Será diferencial conhecer observabilidade e práticas de segurança.",
+  low: { name: "Marina Lima", resume: "Profissional em transição de carreira, com experiência em atendimento ao cliente e rotinas administrativas. Possui organização, comunicação e interesse em tecnologia. Está iniciando os estudos de programação e ainda não atuou profissionalmente com desenvolvimento de software." },
+  medium: { name: "Bruno Alves", resume: "Desenvolvedor júnior com projetos acadêmicos em Python e APIs REST. Criou uma aplicação simples com FastAPI e SQLite, usou Git em trabalhos de equipe e escreveu testes básicos. Tem familiaridade inicial com Docker e está estudando PostgreSQL e integração com serviços externos. Ainda busca experiência profissional em ambientes de produção." },
+  high: { name: "Camila Santos", resume: "Desenvolvedora Python com três anos de experiência construindo APIs REST com FastAPI. Trabalhou com PostgreSQL, Docker, Git e testes automatizados em equipes ágeis. Implementou integrações com serviços externos, autenticação e logs para diagnóstico. Participou de revisões de código e documentou soluções, além de estudar observabilidade e práticas de segurança." },
+};
+function escapeHtml(value) { return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[char])); }
+function setCounter(field) { const counter = document.querySelector(`#${field.input.id}Counter`); if (counter) counter.textContent = `${field.input.value.length.toLocaleString("pt-BR")} / ${field.max.toLocaleString("pt-BR")}`; }
+function clearErrors() { formError.textContent = ""; Object.values(fields).forEach(({ input, error }) => { error.textContent = ""; input.removeAttribute("aria-invalid"); }); }
+function fieldError(field, message) { field.error.textContent = message; field.input.setAttribute("aria-invalid", "true"); }
+function validateClient() { clearErrors(); let firstInvalid = null; Object.values(fields).forEach((field) => { const length = field.input.value.trim().length; if (!length) fieldError(field, "Preencha este campo."); else if (length < field.min) fieldError(field, `Digite pelo menos ${field.min} caracteres.`); else if (length > field.max) fieldError(field, `Use no máximo ${field.max.toLocaleString("pt-BR")} caracteres.`); if (field.input.getAttribute("aria-invalid") === "true" && !firstInvalid) firstInvalid = field.input; }); if (firstInvalid) { firstInvalid.focus(); return false; } return true; }
+function list(items, render) { return items?.length ? `<ul class="insight-list">${items.map(render).join("")}</ul>` : `<p class="empty-state">Nenhum item retornado.</p>`; }
+function modeLabel(mode) { return mode === "gemini" ? "Gemini · análise real" : "Demonstração · resposta simulada"; }
+function evidenceText(item) { return String(item?.evidence || "").trim() || "Não comprovada no currículo"; }
+function renderResult(data) { const matches = Array.isArray(data.matching_skills) ? data.matching_skills : []; const missing = Array.isArray(data.missing_skills) ? data.missing_skills : []; result.innerHTML = `<div class="result-heading"><div><p class="eyebrow">Resultado</p><h2>Análise do perfil</h2></div><span class="mode-badge">${escapeHtml(modeLabel(data.mode))}</span></div><article class="score-card"><div class="score-ring"><strong>${escapeHtml(data.match_score)}</strong><span>/ 100</span></div><div><p class="score-label">Pontuação orientativa</p><p class="score-summary">${escapeHtml(data.summary)}</p><p class="disclaimer">Esta pontuação é um apoio para reflexão, não uma garantia de aprovação.</p></div></article><div class="result-grid"><article class="result-card"><h3>Competências encontradas <span class="legend legend-positive">Evidência</span></h3>${list(matches, (item) => `<li><strong>${escapeHtml(item.skill)}</strong><span>${escapeHtml(evidenceText(item))}</span></li>`)}</article><article class="result-card"><h3>Lacunas <span class="legend legend-warning">A desenvolver</span></h3>${list(missing, (item) => `<li><strong>${escapeHtml(item.skill)} <small>${escapeHtml(item.importance || "")}</small></strong><span>${escapeHtml(item.suggestion || "Sem sugestão informada.")}</span></li>`)}</article></div><div class="result-grid"><article class="result-card"><h3>Sugestões práticas</h3>${list(data.resume_improvements, (item) => `<li>${escapeHtml(item)}</li>`)}</article><article class="result-card"><h3>Pontos fortes relatados</h3>${list(data.strengths, (item) => `<li>${escapeHtml(item)}</li>`)}</article></div><div class="result-grid"><article class="result-card"><h3>Dicas para entrevista</h3>${list(data.interview_tips, (item) => `<li>${escapeHtml(item)}</li>`)}</article><article class="result-card"><h3>Carta de apresentação</h3><p class="cover-letter">${escapeHtml(data.cover_letter)}</p></article></div><div class="result-actions"><button class="button button-secondary" id="copySummary" type="button">Copiar resumo</button><span id="copyStatus" role="status"></span></div>`; result.hidden = false; document.querySelector("#copySummary").addEventListener("click", () => copySummary(data, matches, missing)); }
+async function copySummary(data, matches, missing) { const text = [`CurrículoAI — pontuação orientativa: ${data.match_score}/100`, data.summary, "", "Competências encontradas:", ...matches.map((item) => `- ${item.skill}: ${evidenceText(item)}`), "", "Lacunas:", ...missing.map((item) => `- ${item.skill}: ${item.suggestion || "Sem sugestão informada."}`)].join("\n"); const status = document.querySelector("#copyStatus"); try { await navigator.clipboard.writeText(text); status.textContent = "Resumo copiado."; } catch { status.textContent = "Não foi possível copiar automaticamente."; } setTimeout(() => { status.textContent = ""; }, 3000); }
+function friendlyError(response, data) { if (response.status === 429) return "Limite de requisições atingido. Aguarde um pouco e tente novamente."; if (response.status === 503) return data?.detail || "A IA está indisponível no momento. Tente novamente."; if (response.status === 400 && data?.errors) return "Revise os campos destacados antes de enviar."; return data?.detail || "Não foi possível concluir a análise. Tente novamente."; }
+Object.values(fields).forEach((field) => { field.input.addEventListener("input", () => { setCounter(field); field.error.textContent = ""; field.input.removeAttribute("aria-invalid"); }); setCounter(field); });
+exampleButton.addEventListener("click", () => { const example = examples[scenarioSelect.value]; const hasContent = Object.values(fields).some(({ input }) => input.value.trim()); if (hasContent && !window.confirm("Substituir o conteúdo preenchido pelo exemplo fictício?")) return; fields.candidateName.input.value = example.name; fields.resume.input.value = example.resume; fields.jobDescription.input.value = examples.job; Object.values(fields).forEach(setCounter); clearErrors(); result.hidden = true; exampleStatus.textContent = `Exemplo carregado: ${scenarioSelect.options[scenarioSelect.selectedIndex].text}. Clique em Analisar currículo quando quiser.`; });
+form.addEventListener("submit", async (event) => { event.preventDefault(); if (submitButton.disabled || !validateClient()) return; result.hidden = true; formError.textContent = ""; loading.hidden = false; submitButton.disabled = true; submitButton.textContent = "Analisando..."; const payload = { candidate_name: fields.candidateName.input.value.trim(), resume: fields.resume.input.value.trim(), job_description: fields.jobDescription.input.value.trim() }; try { const response = await fetch("/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); const data = await response.json().catch(() => ({})); if (!response.ok) { if (response.status === 400 && data.errors) Object.entries(data.errors).forEach(([name, message]) => { const field = Object.values(fields).find(({ input }) => input.name === name); if (field) fieldError(field, message); }); throw new Error(friendlyError(response, data)); } renderResult(data); } catch (error) { formError.textContent = error instanceof TypeError ? "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente." : error.message; } finally { loading.hidden = true; submitButton.disabled = false; submitButton.textContent = "Analisar currículo"; } });
