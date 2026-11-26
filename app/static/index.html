@@ -5,24 +5,44 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Compare um currículo com uma vaga usando IA generativa.">
   <title>CurrículoAI | Análise orientativa</title>
-  <link rel="stylesheet" href="/static/styles.css?v=2">
+  <script>
+    (() => {
+      const saved = localStorage.getItem("curriculoai-theme");
+      const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.dataset.theme = saved === "dark" || (saved !== "light" && systemDark) ? "dark" : "light";
+    })();
+  </script>
+  <link rel="stylesheet" href="/static/styles.css?v=3">
 </head>
 <body>
-  <header class="site-header"><div class="shell header-inner"><a class="brand" href="/" aria-label="CurrículoAI início"><span class="brand-mark">C</span><span>CurrículoAI</span></a><span class="header-tag">Análise e insights</span></div></header>
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="/" aria-label="CurrículoAI início"><span class="brand-mark">C</span><span>CurrículoAI</span></a>
+      <div class="header-tools">
+        <span class="header-tag">Análise e insights</span>
+        <label class="theme-control" for="themeSelect"><span>Tema</span><select id="themeSelect" aria-label="Escolha o tema da interface"><option value="system">Sistema</option><option value="light">Claro</option><option value="dark">Escuro</option></select></label>
+      </div>
+    </div>
+  </header>
   <main class="shell">
-    <section class="hero" aria-labelledby="page-title"><div><p class="eyebrow">Seu próximo passo profissional</p><h1 id="page-title">Compare seu currículo com uma vaga.</h1><p class="hero-copy">Receba uma leitura orientativa com evidências encontradas, lacunas e sugestões práticas para melhorar sua candidatura.</p></div><div class="hero-note"><strong>Importante</strong><span>A pontuação é orientativa e não substitui uma avaliação humana.</span></div></section>
-    <section class="panel" aria-labelledby="form-title"><div class="section-heading"><div><p class="eyebrow">Comece por aqui</p><h2 id="form-title">Dados para análise</h2></div><span class="required-note">Todos os campos são obrigatórios</span></div>
+    <section class="hero" aria-labelledby="page-title">
+      <div><p class="eyebrow">Seu próximo passo profissional</p><h1 id="page-title">Compare seu currículo com uma vaga.</h1><p class="hero-copy">Receba uma leitura orientativa com evidências encontradas, lacunas e sugestões práticas para melhorar sua candidatura.</p></div>
+      <div class="hero-note"><strong>Importante</strong><span>A pontuação é orientativa e não substitui uma avaliação humana.</span></div>
+    </section>
+    <section class="panel" aria-labelledby="form-title">
+      <div class="section-heading"><div><p class="eyebrow">Comece por aqui</p><h2 id="form-title">Dados para análise</h2></div><span class="required-note">Todos os campos são obrigatórios</span></div>
       <form id="analysisForm" novalidate>
         <div class="field full-width"><label for="candidateName">Seu nome</label><input id="candidateName" name="candidate_name" type="text" maxlength="80" autocomplete="name" placeholder="Ex.: Ana Souza"><div class="field-meta"><p class="field-error" id="candidateNameError" role="alert"></p><span class="counter" id="candidateNameCounter">0 / 80</span></div></div>
-        <div class="form-grid"><div class="field"><label for="resume">1. Currículo <span class="label-hint">(80 a 12.000 caracteres)</span></label><textarea id="resume" name="resume" maxlength="12000" placeholder="Cole aqui o currículo, experiências, formação e competências..."></textarea><div class="field-meta"><p class="field-error" id="resumeError" role="alert"></p><span class="counter" id="resumeCounter">0 / 12000</span></div></div><div class="field"><label for="jobDescription">2. Descrição da vaga <span class="label-hint">(80 a 8.000 caracteres)</span></label><textarea id="jobDescription" name="job_description" maxlength="8000" placeholder="Cole aqui os requisitos e responsabilidades da vaga..."></textarea><div class="field-meta"><p class="field-error" id="jobDescriptionError" role="alert"></p><span class="counter" id="jobDescriptionCounter">0 / 8000</span></div></div></div>
+        <div class="form-grid"><div class="field"><label for="resume">1. Currículo <span class="label-hint">(80 a 12.000 caracteres)</span></label><textarea id="resume" name="resume" maxlength="12000" placeholder="Cole aqui o currículo, experiências, formação e competências..."></textarea><div class="field-meta"><p class="field-error" id="resumeError" role="alert"></p><span class="counter" id="resumeCounter">0 / 12.000</span></div></div><div class="field"><label for="jobDescription">2. Descrição da vaga <span class="label-hint">(80 a 8.000 caracteres)</span></label><textarea id="jobDescription" name="job_description" maxlength="8000" placeholder="Cole aqui os requisitos e responsabilidades da vaga..."></textarea><div class="field-meta"><p class="field-error" id="jobDescriptionError" role="alert"></p><span class="counter" id="jobDescriptionCounter">0 / 8.000</span></div></div></div>
         <div class="demo-tools"><div><label for="exampleScenario">Cenário para demonstração</label><select id="exampleScenario"><option value="low">Compatibilidade baixa</option><option value="medium">Compatibilidade média</option><option value="high">Compatibilidade alta</option></select></div><button class="button button-secondary" id="exampleButton" type="button">Carregar exemplo fictício</button></div>
-        <p class="demo-note" id="exampleStatus" role="status">O exemplo preenche o formulário sem iniciar a análise.</p><p class="mode-note"><strong>Modo:</strong> a resposta identifica se foi gerada pelo Gemini ou pelo modo demonstração configurado no servidor. Nenhum modo é ativado automaticamente em caso de falha.</p><p class="form-error" id="formError" role="alert"></p><div class="form-actions"><button class="button button-primary" id="submitButton" type="submit">Analisar currículo</button></div>
+        <p class="demo-note" id="exampleStatus" role="status">O exemplo preenche o formulário sem iniciar a análise.</p><p class="mode-note"><strong>Modo:</strong> a resposta identifica se foi gerada pelo Gemini ou pelo modo demonstração configurado no servidor. Nenhum modo é ativado automaticamente em caso de falha.</p><p class="form-error" id="formError" role="alert"></p>
+        <div class="form-actions"><button class="button button-primary" id="submitButton" type="submit">Analisar compatibilidade</button></div>
       </form>
     </section>
     <section class="loading panel" id="loading" aria-live="polite" hidden><div class="spinner" aria-hidden="true"></div><div><strong>Analisando seu perfil...</strong><p>Seus textos continuam preenchidos. Isso pode levar alguns segundos.</p></div></section>
     <section class="result-section" id="result" aria-live="polite" hidden></section>
   </main>
   <footer class="site-footer"><div class="shell"><p>CurrículoAI · Análise orientativa com IA generativa</p><p>Use as sugestões como apoio e revise o resultado antes de tomar decisões.</p></div></footer>
-  <script src="/static/app.js?v=2" defer></script>
+  <script src="/static/app.js?v=3" defer></script>
 </body>
 </html>
