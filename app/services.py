@@ -115,7 +115,7 @@ async def analyze_with_gemini(data: AnalysisRequest) -> AnalysisResponse:
         "<vaga>\n" + data.job_description + "\n</vaga>"
     )
     payload = {
-        "system_instruction": {"parts": [{"text": SYSTEM_PROMPT}]},
+        "systemInstruction": {"parts": [{"text": SYSTEM_PROMPT}]},
         "contents": [{"role": "user", "parts": [{"text": user_content}]}],
         "generationConfig": {
             "temperature": 0.2,
