@@ -119,7 +119,7 @@ async def analyze_with_gemini(data: AnalysisRequest) -> AnalysisResponse:
         "contents": [{"role": "user", "parts": [{"text": user_content}]}],
         "generationConfig": {
             "temperature": 0.2,
-            "responseMimeType": "application/json",
+            "maxOutputTokens": 2048,
         },
     }
     try:
