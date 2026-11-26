@@ -12,7 +12,7 @@
       document.documentElement.dataset.theme = saved === "dark" || (saved !== "light" && systemDark) ? "dark" : "light";
     })();
   </script>
-  <link rel="stylesheet" href="/static/styles.css?v=3">
+  <link rel="stylesheet" href="/static/styles.css?v=4">
 </head>
 <body>
   <header class="site-header">
@@ -20,7 +20,7 @@
       <a class="brand" href="/" aria-label="CurrículoAI início"><span class="brand-mark">C</span><span>CurrículoAI</span></a>
       <div class="header-tools">
         <span class="header-tag">Análise e insights</span>
-        <label class="theme-control" for="themeSelect"><span>Tema</span><select id="themeSelect" aria-label="Escolha o tema da interface"><option value="system">Sistema</option><option value="light">Claro</option><option value="dark">Escuro</option></select></label>
+        <label class="theme-control" for="themeSelect"><span>Tema</span><select id="themeSelect" aria-label="Escolha o tema da interface"><option value="light">Claro</option><option value="dark">Escuro</option><option value="system">Sistema</option></select></label>
       </div>
     </div>
   </header>
@@ -43,6 +43,6 @@
     <section class="result-section" id="result" aria-live="polite" hidden></section>
   </main>
   <footer class="site-footer"><div class="shell"><p>CurrículoAI · Análise orientativa com IA generativa</p><p>Use as sugestões como apoio e revise o resultado antes de tomar decisões.</p></div></footer>
-  <script src="/static/app.js?v=3" defer></script>
+  <script src="/static/app.js?v=4" defer></script>
 </body>
 </html>
