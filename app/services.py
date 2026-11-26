@@ -124,7 +124,11 @@ async def analyze_with_gemini(data: AnalysisRequest) -> AnalysisResponse:
     }
     try:
         async with httpx.AsyncClient(timeout=timeout) as client:
-            response = await client.post(url, params={"key": api_key}, json=payload)
+            response = await client.post(
+                url,
+                headers={"x-goog-api-key": api_key},
+                json=payload,
+            )
     except httpx.TimeoutException as exc:
         raise AIServiceError("A IA demorou demais para responder. Tente novamente.") from exc
     except httpx.RequestError as exc:
